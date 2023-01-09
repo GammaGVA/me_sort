@@ -33,7 +33,7 @@ def sortirovka(spisok: list):
         elem1 = spisok[0]
         elem2 = spisok[1]
         spisok = tuple(spisok[2:])
-        n_spisok = (min(elem1, elem2), max(elem1, elem2))
+        n_spisok = [min(elem1, elem2), max(elem1, elem2)]
 
         for elem in spisok:
             centr_index = len(n_spisok) // 2
@@ -55,28 +55,28 @@ def sortirovka(spisok: list):
                     # коректируем область в которой ищем индекс.
 
                 elif elem == n_spisok[centr_index]:
-                    n_spisok = n_spisok[:centr_index] + (elem,) + n_spisok[centr_index:]
+                    n_spisok.insert(centr_index, elem)
                     break
                     # Вставляем элемент и закрываем цикл так как он вечный
 
                 if r_index == l_index and elem < n_spisok[l_index]:
-                    n_spisok = n_spisok[:l_index] + (elem,) + n_spisok[r_index:]
+                    n_spisok.insert(l_index, elem)
                     break
 
                 elif r_index == l_index and elem > n_spisok[r_index]:
-                    n_spisok = n_spisok[:r_index + 1] + (elem,) + n_spisok[r_index + 1:]
+                    n_spisok.insert(r_index + 1, elem)
                     break
 
                 elif r_index - l_index == 1 and n_spisok[l_index] < elem < n_spisok[r_index]:
-                    n_spisok = n_spisok[:l_index + 1] + (elem,) + n_spisok[r_index:]
+                    n_spisok.insert(r_index, elem)
                     break
 
                 elif r_index - l_index == 1 and (elem < n_spisok[l_index] or elem == n_spisok[l_index]):
-                    n_spisok = n_spisok[:l_index] + (elem,) + n_spisok[l_index:]
+                    n_spisok.insert(l_index, elem)
                     break
 
                 elif r_index - l_index == 1 and (elem > n_spisok[r_index] or elem == n_spisok[r_index]):
-                    n_spisok = n_spisok[:r_index + 1] + (elem,) + n_spisok[r_index + 1:]
+                    n_spisok.insert(r_index + 1, elem)
                     break
 
         return n_spisok
@@ -110,6 +110,12 @@ print(f'sorted быстрее sortirovka в {time_sortirovka / time_sorted}')
 print(f'sorted быстрее sortted в {time_sortted / time_sorted}')
 print(f'sortted быстрее sortirovka в {time_sortirovka / time_sortted}')
 
+for i, ii in zip(a, c):
+    if i != ii:
+        print('Лох')
+else:
+    print("Красавчик")
+
 '''
 Это я ещё сравнивал разницу скорости у себя на версиях пайтон 3.10 и 3.11.
 
@@ -127,8 +133,11 @@ _______________________________________________
 sorted быстрее sortirovka в 3835.2193146667737
 sorted быстрее sortted в 14.070461575543325
 sortted быстрее sortirovka в 272.5723881960623
+_______________________________________________
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 На 3.11
+
 0.02505660057067871
 102.63605499267578
 0.21150755882263184
@@ -149,4 +158,23 @@ ______________________________________________
 sorted быстрее sortirovka в 4788.852680900693
 sorted быстрее sortted в 10.282504833907947
 sortted быстрее sortirovka в 465.7282207258299
+______________________________________________
+
+После того как дурочок убрал конкатенацию кортежа и просто вставляет в список по индексу.
+
+0.022422075271606445
+1.6129510402679443
+0.20899462699890137
+sorted быстрее sortirovka в 71.93584985911001
+sorted быстрее sortted в 9.320931468977617
+sortted быстрее sortirovka в 7.717667499061702
+______________________________________________
+0.024276018142700195
+1.645150899887085
+0.2215421199798584
+sorted быстрее sortirovka в 67.76856444151993
+sorted быстрее sortted в 9.125966156293888
+sortted быстрее sortirovka в 7.425905737638759
 '''
+print('''Главный вывод, что это работает и не надо усложнять. Позже проверю на ещё большей длинне рандомного списка.
+Может что ещё с ифами придумаю, уже есть пару мыслишек.''')
