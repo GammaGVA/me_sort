@@ -1,108 +1,72 @@
 from time import time
 from random import randrange
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
+from main import sortirovka, clone_sorted
 
-def sortirovka(spisok: list):
-    '''Сортировка по аналогии с бинарным поиском.
-    Берём каждый элемент списка(строки\кортежа) и вставляем в новый по принципу бинарного поиска.
-    Главная особенность, перечень должен состоять из однотипных эелементов, все числа, или все строки\буквы.'''
-    if len(spisok) < 2:
-        return spisok
-        # Это иф не смог обойти, что если список будет состоять менее чем из 2 элементов.
-        # По времени от 0.005 до 0.01 секунды съедает этот иф у меня.
-    elem1 = spisok[0]
-    elem2 = spisok[1]
-    n_spisok = [min(elem1, elem2), max(elem1, elem2)]
+T_sortirovka = []
+T_clone_sorted = []
+T_sorted = []
 
-    for elem in spisok[2:]:
-        centr_index = len(n_spisok) // 2
-        l_index = 0
-        r_index = len(n_spisok) - 1
-        # Узнаём крайнии индексы нового списка и центральный индекс.
+res_mid_T_sortirovka = []
+res_mid_T_clone_sorted = []
+res_mid_T_sorted = []
 
-        while True:
-            # не стоит тут боятся вайл тру, так как цикл только при сбои может дойти до 1000 повторений.
-            # 2**32 = 4 294 967 296 - это примерно столько элементов в новом списке при стольких то повторений.
+len_list = [elem * 10000 for elem in range(1, 21)]
 
-            if elem > n_spisok[centr_index]:
-                l_index = centr_index
-                centr_index = (r_index + l_index) // 2
+for count in len_list:
+    TSka, TCSed, TSed = [], [], []
 
-            elif elem < n_spisok[centr_index]:
-                r_index = centr_index
-                centr_index = (r_index + l_index) // 2
-            # этими условиями коректируем область в которой ищем индекс.
+    for __ in range(10):
+        # Было вначале не 10 а 100, но со своим пк очень долго ждать
+        LS = [randrange(10000, 100000) for _ in range(count)]
 
-            if elem <= n_spisok[l_index]:
-                # n_spisok = n_spisok[:l_index] + [elem] + n_spisok[l_index:] - такой вариант оказался хуже по времени.
-                n_spisok.insert(l_index, elem)
-                break
+        start = time()
+        sortirovka(LS)
+        TSka.append(time() - start)
 
-            elif elem >= n_spisok[r_index]:
-                n_spisok.insert(r_index + 1, elem)
-                break
+        start = time()
+        clone_sorted(LS)
+        TCSed.append(time() - start)
 
-            elif r_index - l_index == 1 and n_spisok[l_index] < elem < n_spisok[r_index] or elem == n_spisok[
-                centr_index]:
-                # В ситуации r_index - l_index == 1 l_index всегда равен centr_index (проверил на практике).
-                n_spisok.insert(centr_index + 1, elem)
-                break
+        start = time()
+        sorted(LS)
+        TSed.append(time() - start)
 
-    return n_spisok
+    T_sortirovka.append(sum(TSka) / 10)
+    T_clone_sorted.append(sum(TCSed) / 10)
+    T_sorted.append(sum(TSed) / 10)
 
+    print(f'Порядок {count} завершён.')
 
-sred = []
+df = pd.DataFrame(np.array([T_sortirovka, T_clone_sorted, T_sorted]).T)
+# df = pd.DataFrame.from_dict({'T_sortirovka': T_sortirovka, 'T_clone_sorted': T_clone_sorted, 'T_sorted': T_sorted})
+df.columns = ['T_sortirovka', 'T_clone_sorted', 'T_sorted']
+df.to_csv(f'statistics/stat2.csv')
 
-for _ in range(100):
-    LS = []
+fig = plt.figure(figsize=(50, 50))
 
-    for i in range(100000):
-        # Формирую рандомный список
-        LS.append(randrange(0, 100000))
+graf_sortirovka = fig.add_subplot(221)
+graf_sortirovka.plot(len_list, df['T_sortirovka'])
+graf_sortirovka.set_title('Время sortirovka')
+plt.xticks(len_list, [i for i in range(1, 21)])
+plt.xlabel("Порядок 10е4")
+plt.grid()
 
-    start = time()
-    _sortirovka = sortirovka(LS)
-    sred.append(time() - start)
-print(sum(sred) / len(sred))
+graf_clone = fig.add_subplot(222)
+graf_clone.plot(len_list, df['T_clone_sorted'])
+graf_clone.set_title('Время clone')
+plt.xticks(len_list, [i for i in range(1, 21)])
+plt.xlabel("Порядок 10е4")
+plt.grid()
 
-# 1.5850847029685975 - это если popИем два элемента и без среза идём по списку.
-# 1.574343023300171 - это берём первые 2 элемента и потом идём по срезу списка
-# Нельзя считать правильным сравнение, т.к. сравнивались разные списки, но переписывать вторую функцию мне лень.
-# Да и выборка из 100 рандомных списков думаю даёт какой не какой а средний результат.
+graf_sorted = fig.add_subplot(223)
+graf_sorted.plot(len_list, df['T_sorted'])
+graf_sorted.set_title('Время sorted')
+plt.xticks(len_list, [i for i in range(1, 21)])
+plt.xlabel("Порядок 10е4")
+plt.grid()
 
-# start = time()
-# for elem in LS:
-#     a = elem
-# print(time() - start)
-# Выше оказалось самым быстрым. В добавок у меня нет повторно присвоения elem, так что ещё быстрее выходит.
-
-# start = time()
-# for elem in range(len(LS)):
-#     d = LS[elem]
-# print(time() - start)
-
-# start = time()
-# while LS:
-#      elem = LS.pop()
-# print(time() - start)
-
-# start = time()
-# while True:
-#     elem = LS.pop()
-#     if not LS:
-#         break
-# print(time() - start)
-# ----------------------------------------------------------------------------------------------------------------------
-# start = time()
-# count = 0
-# while True:
-#     count += 1
-#     if count == 100000:
-#         break
-# print(time() - start)
-
-# start = time()
-# for _ in range(1000000): - Этот вариант хоть и быстрее того что выше, на деле в sortirovka медленнее.
-#     if _ -- 100000:
-#         break
-# print(time() - start)
+plt.show()
